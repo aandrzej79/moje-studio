@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SATB Studio Pro</title>
+    <style>
+        :root { --bg: #0b0e11; --panel: #1a1f24; --accent: #f1c40f; --vocal: #e74c3c; --instr: #3498db; --text: #fff; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        .container { max-width: 700px; margin: auto; }
+        .header-panel { background: var(--panel); padding: 20px; border-radius: 15px; border: 1px solid var(--accent); margin-bottom: 20px; text-align: center; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); margin: 15px 0; }
+        .track { background: var(--panel); padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 6px solid #444; }
+        .vocal { border-left-color: var(--vocal); }
+        .instr { border-left-color: var(--instr); }
+        .controls { display: flex; gap: 10px; margin-top: 10px; }
+        button { flex: 2; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .rec-btn { background: var(--vocal); color: white; }
+        .rec-btn.active { background: white; color: var(--vocal); animation: pulse 1s infinite; }
+        .dl-btn { flex: 1; background: #2ecc71; color: white; text-decoration: none; display: none; align-items: center; justify-content: center; border-radius: 8px; font-size: 12px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .monitor { font-size: 12px; color: #888; display: flex; align-items: center; gap: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-panel">
+        <div style="display:flex; justify-content: space-between;">
+            <strong>TEMPO: <span id="bpmVal" style="color:var(--accent)">60</span> BPM</strong>
+        </div>
+        <input type="range" id="bpmSlider" min="40" max="180" value="60">
+        <button id="metroBtn" style="background:var(--accent); color:black; width:100%">START METRONOM</button>
+        <div id="visual" style="width:10px; height:10px; background:#333; border-radius:50%; margin: 10px auto;"></div>
+    </div>
+
+    <div id="vocal-list">
+        </div>
+    
+    <div id="instr-list">
+        </div>
+</div>
+
+<script>
+    const vocalVoices = [{id:'v1', n:'WOKAL SOPRAN'},{id:'v2', n:'WOKAL ALT'},{id:'v3', n:'WOKAL TENOR'},{id:'v4', n:'WOKAL BAS'}];
+    const instrVoices = [{id:'i1', n:'INSTR. SOPRAN'},{id:'i2', n:'INSTR. ALT'},{id:'i3', n:'INSTR. TENOR'},{id:'i4', n:'INSTR. BAS'}];
+
+    let audioCtx = null;
+    let metroTimer = null;
+    let recorders = {};
+    let chunks = {};
+    let audioFiles = {};
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    // FUNKCJA GENERUJĄCA POLA - MUSI SIĘ WYKONAĆ
+    function renderTracks() {
+        const vContainer = document.getElementById('vocal-list');
+        const iContainer = document.getElementById('instr-list');
+        
+        vContainer.innerHTML = "<h3>🎤 Głosy</h3>";
+        iContainer.innerHTML = "<h3>🎹 Instrumenty</h3>";
+
+        vocalVoices.forEach(v => vContainer.innerHTML += createTrackHTML(v, 'vocal'));
+        instrVoices.forEach(v => iContainer.innerHTML += createTrackHTML(v, 'instr'));
+    }
+
+    function createTrackHTML(v, type) {
+        return `
+            <div class="track ${type}">
+                <strong>${v.n}</strong>
+                <div class="monitor">
+                    <input type="checkbox" id="mon-${v.id}"> <label for="mon-${v.id}">Monitoruj</label>
+                </div>
+                <div class="controls">
+                    <button id="btn-${v.id}" class="rec-btn" onclick="handleRec('${v.id}')">NAGRAJ</button>
+                    <a id="dl-${v.id}" class="dl-btn">POBIERZ</a>
+                </div>
+            </div>
+        `;
+    }
+
+    // METRONOM
+    const slider = document.getElementById('bpmSlider');
+    slider.oninput = () => { document.getElementById('bpmVal').innerText = slider.value; if(metroTimer) { stopMetro(); startMetro(); } };
+
+    document.getElementById('metroBtn').onclick = () => {
+        initAudio();
+        if(metroTimer) { stopMetro(); document.getElementById('metroBtn').innerText="START METRONOM"; }
+        else { startMetro(); document.getElementById('metroBtn').innerText="STOP"; }
+    };
+
+    function startMetro() {
+        const ms = 60000 / slider.value;
+        metroTimer = setInterval(() => {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.frequency.value = 800;
+            g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+            const vis = document.getElementById('visual');
+            vis.style.background = "#f1c40f";
+            setTimeout(() => vis.style.background = "#333", 50);
+        }, ms);
+    }
+    function stopMetro() { clearInterval(metroTimer); metroTimer = null; }
+
+    // NAGRYWANIE
+    async function handleRec(id) {
+        initAudio();
+        const btn = document.getElementById(`btn-${id}`);
+        if (recorders[id] && recorders[id].state === "recording") {
+            recorders[id].stop();
+            Object.values(audioFiles).forEach(a => a.pause());
+            btn.classList.remove('active'); btn.innerText = "NAGRAJ";
+            return;
+        }
+
+        // Monitoring
+        Object.keys(audioFiles).forEach(fid => {
+            if (document.getElementById(`mon-${fid}`).checked) {
+                audioFiles[fid].currentTime = 0; audioFiles[fid].play();
+            }
+        });
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recorders[id] = new MediaRecorder(stream);
+            chunks[id] = [];
+            recorders[id].ondataavailable = e => chunks[id].push(e.data);
+            recorders[id].onstop = () => {
+                const blob = new Blob(chunks[id], { type: 'audio/webm' });
+                const url = URL.createObjectURL(blob);
+                audioFiles[id] = new Audio(url);
+                const dl = document.getElementById(`dl-${id}`);
+                dl.style.display = "flex"; dl.href = url; dl.download = `${id}.webm`;
+            };
+            recorders[id].start();
+            btn.classList.add('active'); btn.innerText = "STOP";
+        } catch(e) { alert("Błąd mikrofonu!"); }
+    }
+
+    // WYWOŁANIE GENEROWANIA PÓL PRZY STARCIE
+    window.onload = renderTracks;
+    renderTracks(); 
+</script>
+</body>
+</html>
