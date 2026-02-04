@@ -3,47 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SATB Studio Pro</title>
+    <title>SATB Studio Pro - Final Mobile</title>
     <style>
-        :root { --bg: #0b0e11; --panel: #1a1f24; --accent: #f1c40f; --vocal: #e74c3c; --instr: #3498db; --text: #fff; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
-        .container { max-width: 700px; margin: auto; }
-        .header-panel { background: var(--panel); padding: 20px; border-radius: 15px; border: 1px solid var(--accent); margin-bottom: 20px; text-align: center; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); margin: 15px 0; }
-        .track { background: var(--panel); padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 6px solid #444; }
+        :root {
+            --bg: #0b0e11;
+            --panel: #1a1f24;
+            --accent: #f1c40f;
+            --vocal: #e74c3c;
+            --instr: #3498db;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 10px;
+            overscroll-behavior-y: contain;
+        }
+
+        .container { max-width: 800px; margin: auto; }
+
+        .header-panel {
+            background: var(--panel);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--accent);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+
+        @media (min-width: 600px) {
+            .header-panel { flex-direction: row; align-items: center; text-align: left; }
+        }
+
+        .metro-controls { flex-grow: 1; width: 100%; }
+        .bpm-info { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
+        
+        input[type="range"] { width: 100%; height: 30px; accent-color: var(--accent); cursor: pointer; }
+
+        #metroBtn {
+            background: var(--accent);
+            color: black;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            min-width: 120px;
+            cursor: pointer;
+        }
+
+        .flash-circle {
+            width: 15px; height: 15px; background: #333; border-radius: 50%; 
+            margin: 10px auto 0; transition: 0.05s;
+        }
+        .flash-circle.active { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        h3 { font-size: 0.8rem; color: #888; text-transform: uppercase; margin: 25px 0 10px 5px; border-left: 3px solid #444; padding-left: 10px; }
+        
+        .track {
+            background: var(--panel);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border-left: 6px solid #444;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        @media (min-width: 600px) {
+            .track { flex-direction: row; justify-content: space-between; align-items: center; }
+        }
+
         .vocal { border-left-color: var(--vocal); }
         .instr { border-left-color: var(--instr); }
-        .controls { display: flex; gap: 10px; margin-top: 10px; }
-        button { flex: 2; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .rec-btn { background: var(--vocal); color: white; }
-        .rec-btn.active { background: white; color: var(--vocal); animation: pulse 1s infinite; }
-        .dl-btn { flex: 1; background: #2ecc71; color: white; text-decoration: none; display: none; align-items: center; justify-content: center; border-radius: 8px; font-size: 12px; }
+
+        .monitor-box {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .btns { display: flex; gap: 8px; width: 100%; }
+        @media (min-width: 600px) { .btns { width: auto; } }
+
+        button.rec {
+            background: var(--vocal);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            flex: 2;
+            min-width: 100px;
+        }
+        button.rec.active { background: #fff; color: var(--vocal); animation: pulse 1s infinite; }
+        
+        .dl-btn {
+            background: #2ecc71;
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+            flex: 1;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .monitor { font-size: 12px; color: #888; display: flex; align-items: center; gap: 5px; }
+        
+        #status-bar { font-size: 10px; color: #555; text-align: center; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header-panel">
-        <div style="display:flex; justify-content: space-between;">
-            <strong>TEMPO: <span id="bpmVal" style="color:var(--accent)">60</span> BPM</strong>
+    <div class="header-panel" id="main-header">
+        <div class="metro-controls">
+            <div class="bpm-info">
+                <span>TEMPO:</span>
+                <span style="color:var(--accent)"><span id="bpmVal">60</span> BPM</span>
+            </div>
+            <input type="range" id="bpmSlider" min="40" max="180" value="60">
         </div>
-        <input type="range" id="bpmSlider" min="40" max="180" value="60">
-        <button id="metroBtn" style="background:var(--accent); color:black; width:100%">START METRONOM</button>
-        <div id="visual" style="width:10px; height:10px; background:#333; border-radius:50%; margin: 10px auto;"></div>
+        <div>
+            <button id="metroBtn">START PULS</button>
+            <div id="visual" class="flash-circle"></div>
+        </div>
     </div>
 
-    <div id="vocal-list">
-        </div>
-    
-    <div id="instr-list">
-        </div>
+    <div id="vocal-list"></div>
+    <div id="instr-list"></div>
+
+    <div id="status-bar">Dotknij ekranu, aby aktywować audio. Używaj Chrome/Safari.</div>
 </div>
 
 <script>
-    const vocalVoices = [{id:'v1', n:'WOKAL SOPRAN'},{id:'v2', n:'WOKAL ALT'},{id:'v3', n:'WOKAL TENOR'},{id:'v4', n:'WOKAL BAS'}];
-    const instrVoices = [{id:'i1', n:'INSTR. SOPRAN'},{id:'i2', n:'INSTR. ALT'},{id:'i3', n:'INSTR. TENOR'},{id:'i4', n:'INSTR. BAS'}];
+    const vocalVoices = [
+        {id:'v_sop', name:'WOKAL SOPRAN'}, {id:'v_alt', name:'WOKAL ALT'},
+        {id:'v_ten', name:'WOKAL TENOR'}, {id:'v_bas', name:'WOKAL BAS'}
+    ];
+    const instrVoices = [
+        {id:'i_sop', name:'INSTR. SOPRAN'}, {id:'i_alt', name:'INSTR. ALT'},
+        {id:'i_ten', name:'INSTR. TENOR'}, {id:'i_bas', name:'INSTR. BAS'}
+    ];
 
     let audioCtx = null;
     let metroTimer = null;
@@ -51,46 +165,74 @@
     let chunks = {};
     let audioFiles = {};
 
-    function initAudio() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+    // --- PODMIENIONY SKRYPT INICJALIZACJI ---
+    async function initAudio() {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
+            
+            // Wymuszenie zapytania o mikrofon przy pierwszym dotknięciu
+            const streamTest = await navigator.mediaDevices.getUserMedia({ audio: true });
+            streamTest.getTracks().forEach(track => track.stop()); 
+            
+            document.getElementById('status-bar').innerText = "System audio gotowy. Mikrofon aktywny.";
+            document.getElementById('status-bar').style.color = "#2ecc71";
+        } catch (err) {
+            console.error("Błąd inicjalizacji:", err);
+            // Nie blokujemy wszystkiego, bo użytkownik mógł jeszcze nie kliknąć "Zezwól"
+        }
     }
 
-    // FUNKCJA GENERUJĄCA POLA - MUSI SIĘ WYKONAĆ
-    function renderTracks() {
-        const vContainer = document.getElementById('vocal-list');
-        const iContainer = document.getElementById('instr-list');
-        
-        vContainer.innerHTML = "<h3>🎤 Głosy</h3>";
-        iContainer.innerHTML = "<h3>🎹 Instrumenty</h3>";
+    // Aktywacja przy dowolnym dotknięciu
+    document.body.addEventListener('click', initAudio, { once: true });
+    document.body.addEventListener('touchstart', initAudio, { once: true });
 
-        vocalVoices.forEach(v => vContainer.innerHTML += createTrackHTML(v, 'vocal'));
-        instrVoices.forEach(v => iContainer.innerHTML += createTrackHTML(v, 'instr'));
+    // --- GENEROWANIE INTERFEJSU ---
+    function render() {
+        const vL = document.getElementById('vocal-list');
+        const iL = document.getElementById('instr-list');
+        vL.innerHTML = "<h3>🎤 Głosy Wokalne</h3>";
+        iL.innerHTML = "<h3>🎹 Instrumenty</h3>";
+
+        vocalVoices.forEach(v => vL.innerHTML += createTrackHTML(v, 'vocal'));
+        instrVoices.forEach(v => iL.innerHTML += createTrackHTML(v, 'instr'));
     }
 
     function createTrackHTML(v, type) {
         return `
             <div class="track ${type}">
-                <strong>${v.n}</strong>
-                <div class="monitor">
-                    <input type="checkbox" id="mon-${v.id}"> <label for="mon-${v.id}">Monitoruj</label>
+                <strong>${v.name}</strong>
+                <div class="monitor-box">
+                    <input type="checkbox" id="mon-${v.id}"> <label for="mon-${v.id}">Monitor</label>
                 </div>
-                <div class="controls">
-                    <button id="btn-${v.id}" class="rec-btn" onclick="handleRec('${v.id}')">NAGRAJ</button>
+                <div class="btns">
+                    <button id="btn-${v.id}" class="rec" onclick="handleRec('${v.id}')">NAGRAJ</button>
                     <a id="dl-${v.id}" class="dl-btn">POBIERZ</a>
                 </div>
             </div>
         `;
     }
 
-    // METRONOM
+    // --- METRONOM ---
     const slider = document.getElementById('bpmSlider');
-    slider.oninput = () => { document.getElementById('bpmVal').innerText = slider.value; if(metroTimer) { stopMetro(); startMetro(); } };
+    slider.oninput = () => {
+        document.getElementById('bpmVal').innerText = slider.value;
+        if(metroTimer) { stopMetro(); startMetro(); }
+    };
 
-    document.getElementById('metroBtn').onclick = () => {
-        initAudio();
-        if(metroTimer) { stopMetro(); document.getElementById('metroBtn').innerText="START METRONOM"; }
-        else { startMetro(); document.getElementById('metroBtn').innerText="STOP"; }
+    document.getElementById('metroBtn').onclick = async () => {
+        await initAudio();
+        if(metroTimer) { 
+            stopMetro(); 
+            document.getElementById('metroBtn').innerText="START PULS"; 
+        } else { 
+            startMetro(); 
+            document.getElementById('metroBtn').innerText="STOP"; 
+        }
     };
 
     function startMetro() {
@@ -99,32 +241,35 @@
             const osc = audioCtx.createOscillator();
             const g = audioCtx.createGain();
             osc.connect(g); g.connect(audioCtx.destination);
-            osc.frequency.value = 800;
+            osc.frequency.value = 1000;
             g.gain.setValueAtTime(0.05, audioCtx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
             osc.start(); osc.stop(audioCtx.currentTime + 0.05);
             const vis = document.getElementById('visual');
-            vis.style.background = "#f1c40f";
-            setTimeout(() => vis.style.background = "#333", 50);
+            vis.classList.add('active');
+            setTimeout(()=>vis.classList.remove('active'), 50);
         }, ms);
     }
     function stopMetro() { clearInterval(metroTimer); metroTimer = null; }
 
-    // NAGRYWANIE
+    // --- NAGRYWANIE ---
     async function handleRec(id) {
-        initAudio();
+        await initAudio();
         const btn = document.getElementById(`btn-${id}`);
+        
         if (recorders[id] && recorders[id].state === "recording") {
             recorders[id].stop();
-            Object.values(audioFiles).forEach(a => a.pause());
-            btn.classList.remove('active'); btn.innerText = "NAGRAJ";
+            [...vocalVoices, ...instrVoices].forEach(v => { if(audioFiles[v.id]) audioFiles[v.id].pause(); });
+            btn.classList.remove('active');
+            btn.innerText = "NAGRAJ";
             return;
         }
 
-        // Monitoring
-        Object.keys(audioFiles).forEach(fid => {
-            if (document.getElementById(`mon-${fid}`).checked) {
-                audioFiles[fid].currentTime = 0; audioFiles[fid].play();
+        // Monitoring nagranych ścieżek
+        [...vocalVoices, ...instrVoices].forEach(v => {
+            if (document.getElementById(`mon-${v.id}`).checked && audioFiles[v.id]) {
+                audioFiles[v.id].currentTime = 0;
+                audioFiles[v.id].play();
             }
         });
 
@@ -138,16 +283,19 @@
                 const url = URL.createObjectURL(blob);
                 audioFiles[id] = new Audio(url);
                 const dl = document.getElementById(`dl-${id}`);
-                dl.style.display = "flex"; dl.href = url; dl.download = `${id}.webm`;
+                dl.style.display = "flex";
+                dl.href = url;
+                dl.download = `Dubra_${id}.webm`;
             };
             recorders[id].start();
-            btn.classList.add('active'); btn.innerText = "STOP";
-        } catch(e) { alert("Błąd mikrofonu!"); }
+            btn.classList.add('active');
+            btn.innerText = "STOP";
+        } catch(e) { 
+            alert("Brak dostępu do mikrofonu! Upewnij się, że używasz HTTPS i zezwoliłeś na mikrofon w ustawieniach kłódki."); 
+        }
     }
 
-    // WYWOŁANIE GENEROWANIA PÓL PRZY STARCIE
-    window.onload = renderTracks;
-    renderTracks(); 
+    render();
 </script>
 </body>
 </html>
