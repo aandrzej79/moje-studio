@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SATB Studio Pro - Final Mobile</title>
+    <title>SATB Studio Pro - Aligned Edition</title>
     <style>
         :root {
             --bg: #0b0e11;
@@ -23,8 +23,9 @@
             overscroll-behavior-y: contain;
         }
 
-        .container { max-width: 800px; margin: auto; }
+        .container { max-width: 850px; margin: auto; }
 
+        /* PANEL STEROWANIA */
         .header-panel {
             background: var(--panel);
             padding: 20px;
@@ -34,26 +35,27 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            text-align: center;
         }
 
         @media (min-width: 600px) {
-            .header-panel { flex-direction: row; align-items: center; text-align: left; }
+            .header-panel { flex-direction: row; align-items: center; }
         }
 
         .metro-controls { flex-grow: 1; width: 100%; }
-        .bpm-info { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
+        .control-group { margin-bottom: 12px; }
+        .info-row { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
         
-        input[type="range"] { width: 100%; height: 30px; accent-color: var(--accent); cursor: pointer; }
+        input[type="range"] { width: 100%; height: 25px; accent-color: var(--accent); cursor: pointer; }
 
         #metroBtn {
             background: var(--accent);
             color: black;
             border: none;
-            padding: 15px 25px;
-            border-radius: 10px;
+            padding: 20px;
+            border-radius: 12px;
             font-weight: bold;
-            min-width: 120px;
+            font-size: 1.1rem;
+            min-width: 140px;
             cursor: pointer;
         }
 
@@ -65,46 +67,57 @@
 
         h3 { font-size: 0.8rem; color: #888; text-transform: uppercase; margin: 25px 0 10px 5px; border-left: 3px solid #444; padding-left: 10px; }
         
+        /* UKŁAD ŚCIEŻEK - KLUCZ DO WYRÓWNANIA */
         .track {
             background: var(--panel);
-            padding: 15px;
+            padding: 12px 15px;
             border-radius: 12px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             border-left: 6px solid #444;
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr; /* Mobile: jeden pod drugim */
             gap: 12px;
+            align-items: center;
         }
 
-        @media (min-width: 600px) {
-            .track { flex-direction: row; justify-content: space-between; align-items: center; }
+        /* Wyrównanie dla tabletów i PC */
+        @media (min-width: 650px) {
+            .track {
+                grid-template-columns: 160px 140px 1fr; /* Stałe szerokości dla nazwy i monitoringu */
+                gap: 20px;
+            }
         }
 
         .vocal { border-left-color: var(--vocal); }
         .instr { border-left-color: var(--instr); }
 
+        .track-name { font-weight: bold; font-size: 0.9rem; white-space: nowrap; }
+
         .monitor-box {
             font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             background: rgba(255,255,255,0.05);
             padding: 8px 12px;
             border-radius: 8px;
+            justify-self: start; /* Trzyma się lewej w swojej kolumnie */
+            min-width: 110px;
         }
 
+        .monitor-box input { width: 18px; height: 18px; cursor: pointer; }
+
         .btns { display: flex; gap: 8px; width: 100%; }
-        @media (min-width: 600px) { .btns { width: auto; } }
 
         button.rec {
             background: var(--vocal);
             color: white;
             border: none;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             font-weight: bold;
             flex: 2;
-            min-width: 100px;
+            cursor: pointer;
         }
         button.rec.active { background: #fff; color: var(--vocal); animation: pulse 1s infinite; }
         
@@ -112,41 +125,46 @@
             background: #2ecc71;
             color: white;
             text-decoration: none;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             font-weight: bold;
             display: none;
             flex: 1;
             text-align: center;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
         }
 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        
-        #status-bar { font-size: 10px; color: #555; text-align: center; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header-panel" id="main-header">
+    <div class="header-panel">
         <div class="metro-controls">
-            <div class="bpm-info">
-                <span>TEMPO:</span>
-                <span style="color:var(--accent)"><span id="bpmVal">60</span> BPM</span>
+            <div class="control-group">
+                <div class="info-row">
+                    <span>TEMPO:</span>
+                    <span style="color:var(--accent)"><span id="bpmVal">60</span> BPM</span>
+                </div>
+                <input type="range" id="bpmSlider" min="40" max="180" value="60">
             </div>
-            <input type="range" id="bpmSlider" min="40" max="180" value="60">
+            <div class="control-group">
+                <div class="info-row">
+                    <span>GŁOŚNOŚĆ KLIKU:</span>
+                    <span id="volVal">50%</span>
+                </div>
+                <input type="range" id="volSlider" min="0" max="100" value="50">
+            </div>
         </div>
-        <div>
-            <button id="metroBtn">START PULS</button>
+        <div style="text-align:center">
+            <button id="metroBtn">START</button>
             <div id="visual" class="flash-circle"></div>
         </div>
     </div>
 
     <div id="vocal-list"></div>
     <div id="instr-list"></div>
-
-    <div id="status-bar">Dotknij ekranu, aby aktywować audio. Używaj Chrome/Safari.</div>
 </div>
 
 <script>
@@ -165,39 +183,19 @@
     let chunks = {};
     let audioFiles = {};
 
-    // --- PODMIENIONY SKRYPT INICJALIZACJI ---
     async function initAudio() {
-        try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                await audioCtx.resume();
-            }
-            
-            // Wymuszenie zapytania o mikrofon przy pierwszym dotknięciu
-            const streamTest = await navigator.mediaDevices.getUserMedia({ audio: true });
-            streamTest.getTracks().forEach(track => track.stop()); 
-            
-            document.getElementById('status-bar').innerText = "System audio gotowy. Mikrofon aktywny.";
-            document.getElementById('status-bar').style.color = "#2ecc71";
-        } catch (err) {
-            console.error("Błąd inicjalizacji:", err);
-            // Nie blokujemy wszystkiego, bo użytkownik mógł jeszcze nie kliknąć "Zezwól"
-        }
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
     }
 
-    // Aktywacja przy dowolnym dotknięciu
-    document.body.addEventListener('click', initAudio, { once: true });
     document.body.addEventListener('touchstart', initAudio, { once: true });
+    document.body.addEventListener('click', initAudio, { once: true });
 
-    // --- GENEROWANIE INTERFEJSU ---
     function render() {
         const vL = document.getElementById('vocal-list');
         const iL = document.getElementById('instr-list');
         vL.innerHTML = "<h3>🎤 Głosy Wokalne</h3>";
         iL.innerHTML = "<h3>🎹 Instrumenty</h3>";
-
         vocalVoices.forEach(v => vL.innerHTML += createTrackHTML(v, 'vocal'));
         instrVoices.forEach(v => iL.innerHTML += createTrackHTML(v, 'instr'));
     }
@@ -205,74 +203,61 @@
     function createTrackHTML(v, type) {
         return `
             <div class="track ${type}">
-                <strong>${v.name}</strong>
+                <div class="track-name">${v.name}</div>
                 <div class="monitor-box">
-                    <input type="checkbox" id="mon-${v.id}"> <label for="mon-${v.id}">Monitor</label>
+                    <input type="checkbox" id="mon-${v.id}">
+                    <label for="mon-${v.id}">Słuchaj</label>
                 </div>
                 <div class="btns">
                     <button id="btn-${v.id}" class="rec" onclick="handleRec('${v.id}')">NAGRAJ</button>
                     <a id="dl-${v.id}" class="dl-btn">POBIERZ</a>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
-    // --- METRONOM ---
-    const slider = document.getElementById('bpmSlider');
-    slider.oninput = () => {
-        document.getElementById('bpmVal').innerText = slider.value;
-        if(metroTimer) { stopMetro(); startMetro(); }
-    };
+    // Metronom
+    const bpmS = document.getElementById('bpmSlider');
+    const volS = document.getElementById('volSlider');
+    bpmS.oninput = () => { document.getElementById('bpmVal').innerText = bpmS.value; if(metroTimer) { stopMetro(); startMetro(); } };
+    volS.oninput = () => { document.getElementById('volVal').innerText = volS.value + "%"; };
 
     document.getElementById('metroBtn').onclick = async () => {
         await initAudio();
-        if(metroTimer) { 
-            stopMetro(); 
-            document.getElementById('metroBtn').innerText="START PULS"; 
-        } else { 
-            startMetro(); 
-            document.getElementById('metroBtn').innerText="STOP"; 
-        }
+        if(metroTimer) { stopMetro(); document.getElementById('metroBtn').innerText="START"; }
+        else { startMetro(); document.getElementById('metroBtn').innerText="STOP"; }
     };
 
     function startMetro() {
-        const ms = 60000 / slider.value;
+        const ms = 60000 / bpmS.value;
         metroTimer = setInterval(() => {
             const osc = audioCtx.createOscillator();
             const g = audioCtx.createGain();
             osc.connect(g); g.connect(audioCtx.destination);
             osc.frequency.value = 1000;
-            g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            g.gain.setValueAtTime((volS.value/100)*0.4, audioCtx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
             osc.start(); osc.stop(audioCtx.currentTime + 0.05);
             const vis = document.getElementById('visual');
-            vis.classList.add('active');
-            setTimeout(()=>vis.classList.remove('active'), 50);
+            vis.classList.add('active'); setTimeout(()=>vis.classList.remove('active'), 50);
         }, ms);
     }
     function stopMetro() { clearInterval(metroTimer); metroTimer = null; }
 
-    // --- NAGRYWANIE ---
+    // Nagrywanie
     async function handleRec(id) {
         await initAudio();
         const btn = document.getElementById(`btn-${id}`);
-        
         if (recorders[id] && recorders[id].state === "recording") {
             recorders[id].stop();
             [...vocalVoices, ...instrVoices].forEach(v => { if(audioFiles[v.id]) audioFiles[v.id].pause(); });
-            btn.classList.remove('active');
-            btn.innerText = "NAGRAJ";
+            btn.classList.remove('active'); btn.innerText = "NAGRAJ";
             return;
         }
-
-        // Monitoring nagranych ścieżek
         [...vocalVoices, ...instrVoices].forEach(v => {
             if (document.getElementById(`mon-${v.id}`).checked && audioFiles[v.id]) {
-                audioFiles[v.id].currentTime = 0;
-                audioFiles[v.id].play();
+                audioFiles[v.id].currentTime = 0; audioFiles[v.id].play();
             }
         });
-
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             recorders[id] = new MediaRecorder(stream);
@@ -283,18 +268,12 @@
                 const url = URL.createObjectURL(blob);
                 audioFiles[id] = new Audio(url);
                 const dl = document.getElementById(`dl-${id}`);
-                dl.style.display = "flex";
-                dl.href = url;
-                dl.download = `Dubra_${id}.webm`;
+                dl.style.display = "flex"; dl.href = url; dl.download = `Studio_${id}.webm`;
             };
             recorders[id].start();
-            btn.classList.add('active');
-            btn.innerText = "STOP";
-        } catch(e) { 
-            alert("Brak dostępu do mikrofonu! Upewnij się, że używasz HTTPS i zezwoliłeś na mikrofon w ustawieniach kłódki."); 
-        }
+            btn.classList.add('active'); btn.innerText = "STOP";
+        } catch(e) { alert("Błąd mikrofonu!"); }
     }
-
     render();
 </script>
 </body>
