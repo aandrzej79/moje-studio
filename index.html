@@ -3,305 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SATB Studio Pro - WebM Mix Edition</title>
+    <title>SATB Studio - Progress Edition</title>
     <style>
         :root {
-            --bg: #0b0e11;
-            --panel: #1a1f24;
-            --accent: #f1c40f;
-            --vocal: #e74c3c;
-            --instr: #3498db;
-            --text: #ffffff;
-            --success: #2ecc71;
+            --bg: #0b0e11; --panel: #1a1f24; --accent: #f1c40f;
+            --vocal: #e74c3c; --instr: #3498db; --text: #fff; --success: #2ecc71;
+            --wait: #e67e22; --play: #9b59b6;
         }
-
-        body {
-            font-family: -apple-system, system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 10px;
-            overscroll-behavior-y: contain;
-        }
-
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
         .container { max-width: 850px; margin: auto; }
-
-        .project-panel {
-            background: var(--panel);
-            padding: 15px 20px;
-            border-radius: 15px;
-            margin-bottom: 10px;
-            border-bottom: 4px solid var(--accent);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .project-panel label { font-size: 0.75rem; color: var(--accent); font-weight: bold; text-transform: uppercase; }
-        .project-panel input { background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 12px; border-radius: 8px; font-size: 1.1rem; outline: none; }
-
-        #exportBtn {
-            width: 100%;
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-        }
-        #exportBtn:disabled { background: #444; cursor: not-allowed; box-shadow: none; }
-
-        .header-panel {
-            background: var(--panel);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            border: 1px solid #333;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
+        .project-panel { background: var(--panel); padding: 15px; border-radius: 15px; margin-bottom: 10px; border-bottom: 4px solid var(--accent); display: flex; flex-direction: column; gap: 5px; }
+        .project-panel input { background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; font-size: 1rem; }
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        #exportBtn { background: var(--success); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; min-height: 50px; transition: 0.2s; }
+        #playBtn { background: var(--play); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        #playBtn.playing { background: #c0392b; }
+        .header-panel { background: var(--panel); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; display: flex; flex-direction: column; gap: 15px; }
         @media (min-width: 600px) { .header-panel { flex-direction: row; align-items: center; } }
-
         .metro-controls { flex-grow: 1; width: 100%; }
-        .control-group { margin-bottom: 12px; }
-        .info-row { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
-        input[type="range"] { width: 100%; height: 25px; accent-color: var(--accent); cursor: pointer; }
-
-        #metroBtn { background: var(--accent); color: black; border: none; padding: 20px; border-radius: 12px; font-weight: bold; font-size: 1.1rem; min-width: 140px; cursor: pointer; }
-
-        .flash-circle { width: 15px; height: 15px; background: #333; border-radius: 50%; margin: 10px auto 0; transition: 0.05s; }
-        .flash-circle.active { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-
-        h3 { font-size: 0.8rem; color: #888; text-transform: uppercase; margin: 25px 0 10px 5px; border-left: 3px solid #444; padding-left: 10px; }
-        
-        .track { background: var(--panel); padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; border-left: 6px solid #444; display: grid; grid-template-columns: 1fr; gap: 12px; align-items: center; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); height: 30px; }
+        #metroBtn { background: var(--accent); color: black; border: none; padding: 20px; border-radius: 12px; font-weight: bold; min-width: 140px; cursor: pointer; }
+        .flash-circle { width: 20px; height: 20px; background: #333; border-radius: 50%; margin: 10px auto; transition: 0.05s; }
+        .flash-circle.active { background: var(--accent); box-shadow: 0 0 15px var(--accent); }
+        .track { background: var(--panel); padding: 12px; border-radius: 12px; margin-bottom: 8px; border-left: 6px solid #444; display: grid; grid-template-columns: 1fr; gap: 10px; align-items: center; }
         @media (min-width: 650px) { .track { grid-template-columns: 160px 140px 1fr; gap: 20px; } }
-
         .vocal { border-left-color: var(--vocal); }
         .instr { border-left-color: var(--instr); }
-        .track-name { font-weight: bold; font-size: 0.9rem; }
-
-        .monitor-box { font-size: 0.85rem; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; justify-self: start; min-width: 110px; }
-        .btns { display: flex; gap: 8px; width: 100%; }
-        button.rec { background: var(--vocal); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; flex: 2; cursor: pointer; }
-        button.rec.active { background: #fff; color: var(--vocal); animation: pulse 1s infinite; }
-        .dl-btn { background: var(--success); color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: bold; display: none; flex: 1; text-align: center; font-size: 0.75rem; }
-
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .monitor-box { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
+        button.rec { background: var(--vocal); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
+        button.rec.waiting { background: var(--wait); animation: blink 0.5s infinite; }
+        button.rec.active { background: #fff; color: var(--vocal); }
+        .dl-btn { background: var(--success); color: white; text-decoration: none; padding: 10px; border-radius: 8px; display: none; text-align: center; font-size: 0.8rem; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
-
 <div class="container">
     <div class="project-panel">
-        <label for="projectName">Nazwa Projektu</label>
-        <input type="text" id="projectName" value="Dubra">
+        <label>NAZWA PROJEKTU</label>
+        <input type="text" id="projectName" value="Tytuł">
     </div>
-
-    <button id="exportBtn" onclick="exportMixedAudio()">
-        💾 EKSPORTUJ ZAZNACZONE (MIX .WEBM)
-    </button>
-
+    <div class="action-btns">
+        <button id="playBtn" onclick="togglePlay()">▶ ODSŁUCHAJ MIX</button>
+        <button id="exportBtn" onclick="exportMixedAudio()">💾 EKSPORTUJ MIX</button>
+    </div>
     <div class="header-panel">
         <div class="metro-controls">
-            <div class="control-group">
-                <div class="info-row"><span>TEMPO:</span><span style="color:var(--accent)"><span id="bpmVal">60</span> BPM</span></div>
-                <input type="range" id="bpmSlider" min="40" max="180" value="60">
-            </div>
-            <div class="control-group">
-                <div class="info-row"><span>GŁOŚNOŚĆ KLIKU:</span><span id="volVal">50%</span></div>
-                <input type="range" id="volSlider" min="0" max="100" value="50">
-            </div>
+            <div>TEMPO: <span id="bpmVal" style="color:var(--accent)">60</span> BPM</div>
+            <input type="range" id="bpmSlider" min="40" max="180" value="60">
+            <div style="margin-top:10px">GŁOŚNOŚĆ KLIKU: <span id="volVal">20%</span></div>
+            <input type="range" id="volSlider" min="0" max="100" value="20">
         </div>
         <div style="text-align:center">
-            <button id="metroBtn">START</button>
+            <button id="metroBtn">WŁĄCZ METRONOM</button>
             <div id="visual" class="flash-circle"></div>
         </div>
     </div>
-
     <div id="vocal-list"></div>
     <div id="instr-list"></div>
 </div>
 
 <script>
-    const vocalVoices = [
-        {id:'v_sop', name:'Sopran', label:'WOKAL SOPRAN'}, {id:'v_alt', name:'Alt', label:'WOKAL ALT'},
-        {id:'v_ten', name:'Tenor', label:'WOKAL TENOR'}, {id:'v_bas', name:'Bas', label:'WOKAL BAS'}
-    ];
-    const instrVoices = [
-        {id:'i_sop', name:'Instr_Sopran', label:'INSTR. SOPRAN'}, {id:'i_alt', name:'Instr_Alt', label:'INSTR. ALT'},
-        {id:'i_ten', name:'Instr_Tenor', label:'INSTR. TENOR'}, {id:'i_bas', name:'Instr_Bas', label:'INSTR. BAS'}
-    ];
-
-    let audioCtx = null;
-    let metroTimer = null;
-    let recorders = {};
-    let chunks = {};
-    let audioBlobs = {}; 
+    const vocalVoices = [{id:'v_sop', n:'Sopran', l:'WOKAL SOPRAN'},{id:'v_alt', n:'Alt', l:'WOKAL ALT'},{id:'v_ten', n:'Tenor', l:'WOKAL TENOR'},{id:'v_bas', n:'Bas', l:'WOKAL BAS'}];
+    const instrVoices = [{id:'i_sop', n:'I_Sopran', l:'INSTR. SOPRAN'},{id:'i_alt', n:'I_Alt', l:'INSTR. ALT'},{id:'i_ten', n:'I_Tenor', l:'INSTR. TENOR'},{id:'i_bas', n:'I_Bas', l:'INSTR. BAS'}];
+    
+    let audioCtx = null, metroTimer = null, recorders = {}, chunks = {}, audioBlobs = {};
+    let isMetroRunning = false, pendingRec = null;
+    let activePlayers = [], countdownInterval = null;
 
     async function initAudio() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
         if (audioCtx.state === 'suspended') await audioCtx.resume();
     }
-
-    document.body.addEventListener('touchstart', initAudio, { once: true });
     document.body.addEventListener('click', initAudio, { once: true });
 
     function render() {
-        const vL = document.getElementById('vocal-list');
-        const iL = document.getElementById('instr-list');
-        vL.innerHTML = "<h3>🎤 Głosy Wokalne</h3>";
-        iL.innerHTML = "<h3>🎹 Instrumenty</h3>";
-        [...vocalVoices].forEach(v => vL.innerHTML += createTrackHTML(v, 'vocal'));
-        [...instrVoices].forEach(v => iL.innerHTML += createTrackHTML(v, 'instr'));
+        const vL = document.getElementById('vocal-list'), iL = document.getElementById('instr-list');
+        vL.innerHTML = "<h3>🎤 Głosy</h3>"; iL.innerHTML = "<h3>🎹 Instrumenty</h3>";
+        vocalVoices.forEach(v => vL.innerHTML += createTrackHTML(v, 'vocal'));
+        instrVoices.forEach(v => iL.innerHTML += createTrackHTML(v, 'instr'));
     }
 
     function createTrackHTML(v, type) {
         return `<div class="track ${type}">
-            <div class="track-name">${v.label}</div>
-            <div class="monitor-box">
-                <input type="checkbox" id="mon-${v.id}"> <label for="mon-${v.id}">Słuchaj</label>
-            </div>
-            <div class="btns">
-                <button id="btn-${v.id}" class="rec" onclick="handleRec('${v.id}', '${v.name}')">NAGRAJ</button>
+            <div class="track-name"><b>${v.l}</b></div>
+            <div class="monitor-box"><input type="checkbox" id="mon-${v.id}"><label for="mon-${v.id}">Słuchaj</label></div>
+            <div style="display:flex; gap:5px; align-items:center;">
+                <button id="btn-${v.id}" class="rec" onclick="requestRec('${v.id}', '${v.n}')">NAGRAJ</button>
                 <a id="dl-${v.id}" class="dl-btn">POBIERZ</a>
             </div>
         </div>`;
     }
 
-    const bpmS = document.getElementById('bpmSlider');
-    const volS = document.getElementById('volSlider');
-    bpmS.oninput = () => { document.getElementById('bpmVal').innerText = bpmS.value; if(metroTimer) { stopMetro(); startMetro(); } };
+    const bpmS = document.getElementById('bpmSlider'), volS = document.getElementById('volSlider');
+    bpmS.oninput = () => { document.getElementById('bpmVal').innerText = bpmS.value; if(isMetroRunning) { stopMetro(); startMetro(); } };
     volS.oninput = () => { document.getElementById('volVal').innerText = volS.value + "%"; };
 
     document.getElementById('metroBtn').onclick = async () => {
         await initAudio();
-        if(metroTimer) { stopMetro(); document.getElementById('metroBtn').innerText="START"; }
-        else { startMetro(); document.getElementById('metroBtn').innerText="STOP"; }
+        if(isMetroRunning) { stopMetro(); document.getElementById('metroBtn').innerText="WŁĄCZ METRONOM"; }
+        else { startMetro(); document.getElementById('metroBtn').innerText="ZATRZYMAJ"; }
     };
 
     function startMetro() {
+        isMetroRunning = true;
         const ms = 60000 / bpmS.value;
         metroTimer = setInterval(() => {
+            const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const g = audioCtx.createGain();
             osc.connect(g); g.connect(audioCtx.destination);
-            osc.frequency.value = 1000;
-            g.gain.setValueAtTime((volS.value/100)*0.4, audioCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
-            const vis = document.getElementById('visual');
-            vis.classList.add('active'); setTimeout(()=>vis.classList.remove('active'), 50);
+            osc.frequency.setValueAtTime(880, now);
+            const v = volS.value / 100 * 0.3;
+            g.gain.setValueAtTime(0, now);
+            g.gain.linearRampToValueAtTime(v, now + 0.005);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+            osc.start(now); osc.stop(now + 0.05);
+            requestAnimationFrame(() => {
+                const vis = document.getElementById('visual');
+                if(vis) { vis.classList.add('active'); setTimeout(()=>vis.classList.remove('active'), 50); }
+            });
+            if (pendingRec) { startActualRecording(pendingRec.id, pendingRec.voiceName); pendingRec = null; }
         }, ms);
     }
-    function stopMetro() { clearInterval(metroTimer); metroTimer = null; }
+    function stopMetro() { clearInterval(metroTimer); metroTimer = null; isMetroRunning = false; }
 
-    async function handleRec(id, voiceName) {
-        await initAudio();
+    function togglePlay() {
+        const btn = document.getElementById('playBtn');
+        if (activePlayers.length > 0) { stopAllPlayback(); return; }
+        const selectedIds = [...vocalVoices, ...instrVoices].filter(v => document.getElementById(`mon-${v.id}`).checked && audioBlobs[v.id]);
+        if (selectedIds.length === 0) { alert("Zaznacz 'Słuchaj' przy nagranych głosach!"); return; }
+        let maxDuration = 0;
+        selectedIds.forEach(v => {
+            const au = new Audio(URL.createObjectURL(audioBlobs[v.id]));
+            au.onloadedmetadata = () => { if (au.duration > maxDuration) maxDuration = au.duration; };
+            activePlayers.push(au);
+        });
+        setTimeout(() => { activePlayers.forEach(p => p.play()); btn.classList.add('playing'); startCountdown(maxDuration); }, 150);
+    }
+
+    function startCountdown(duration) {
+        const btn = document.getElementById('playBtn');
+        let timeLeft = Math.ceil(duration);
+        const formatTime = (s) => { const m = Math.floor(s/60); const ss = Math.floor(s%60); return `${m}:${ss<10?'0':''}${ss}`; };
+        btn.innerText = `⏹ STOP [${formatTime(timeLeft)}]`;
+        countdownInterval = setInterval(() => { timeLeft--; if (timeLeft <= 0) stopAllPlayback(); else btn.innerText = `⏹ STOP [${formatTime(timeLeft)}]`; }, 1000);
+    }
+
+    function stopAllPlayback() {
+        const btn = document.getElementById('playBtn');
+        clearInterval(countdownInterval);
+        activePlayers.forEach(p => { p.pause(); p.currentTime = 0; });
+        activePlayers = [];
+        btn.classList.remove('playing');
+        btn.innerText = "▶ ODSŁUCHAJ MIX";
+    }
+
+    function requestRec(id, voiceName) {
+        if (!isMetroRunning) { alert("Włącz metronom!"); return; }
         const btn = document.getElementById(`btn-${id}`);
-        if (recorders[id] && recorders[id].state === "recording") {
-            recorders[id].stop();
-            btn.classList.remove('active'); btn.innerText = "NAGRAJ";
-            return;
-        }
+        if (recorders[id] && recorders[id].state === "recording") { recorders[id].stop(); btn.classList.remove('active'); btn.innerText = "NAGRAJ"; return; }
+        btn.classList.add('waiting'); btn.innerText = "CZEKAJ...";
+        pendingRec = { id, voiceName };
+    }
 
+    async function startActualRecording(id, voiceName) {
+        const btn = document.getElementById(`btn-${id}`);
+        btn.classList.remove('waiting'); btn.classList.add('active'); btn.innerText = "STOP";
         [...vocalVoices, ...instrVoices].forEach(v => {
             if (document.getElementById(`mon-${v.id}`).checked && audioBlobs[v.id]) {
                 const au = new Audio(URL.createObjectURL(audioBlobs[v.id]));
                 au.play();
+                activePlayers.push(au);
             }
         });
-
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            recorders[id] = new MediaRecorder(stream);
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }});
+            recorders[id] = new MediaRecorder(stream, { audioBitsPerSecond: 128000 });
             chunks[id] = [];
             recorders[id].ondataavailable = e => chunks[id].push(e.data);
             recorders[id].onstop = () => {
                 audioBlobs[id] = new Blob(chunks[id], { type: 'audio/webm' });
-                const url = URL.createObjectURL(audioBlobs[id]);
                 const dl = document.getElementById(`dl-${id}`);
-                dl.style.display = "flex"; dl.href = url;
-                const projName = document.getElementById('projectName').value.replace(/\s+/g, '_') || 'Projekt';
-                dl.download = `${projName}_${voiceName}.webm`;
+                dl.style.display = "block"; dl.href = URL.createObjectURL(audioBlobs[id]);
+                const p = document.getElementById('projectName').value.replace(/\s+/g, '_');
+                dl.download = `${p}_${voiceName}.webm`;
+                stream.getTracks().forEach(track => track.stop());
             };
             recorders[id].start();
-            btn.classList.add('active'); btn.innerText = "STOP";
         } catch(e) { alert("Błąd mikrofonu!"); }
     }
 
-    // --- EKSPORT MIXU DO WEBM ---
+    // --- POPRAWIONY EKSPORT Z POSTĘPEM % ---
     async function exportMixedAudio() {
         await initAudio();
-        const selectedIds = [...vocalVoices, ...instrVoices]
-            .map(v => v.id)
-            .filter(id => document.getElementById(`mon-${id}`).checked && audioBlobs[id]);
-
-        if (selectedIds.length === 0) {
-            alert("Zaznacz pole 'Słuchaj' przy nagranych ścieżkach.");
-            return;
-        }
-
+        const selectedIds = [...vocalVoices, ...instrVoices].map(v => v.id).filter(id => document.getElementById(`mon-${id}`).checked && audioBlobs[id]);
+        if (selectedIds.length === 0) { alert("Zaznacz 'Słuchaj'!"); return; }
+        
         const btn = document.getElementById('exportBtn');
-        btn.innerText = "MIKSOWANIE...";
         btn.disabled = true;
+        btn.innerText = "MIKSUJĘ (0%)";
 
         try {
             const buffers = await Promise.all(selectedIds.map(async id => {
-                const arrayBuffer = await audioBlobs[id].arrayBuffer();
-                return await audioCtx.decodeAudioData(arrayBuffer);
+                const ab = await audioBlobs[id].arrayBuffer();
+                return await audioCtx.decodeAudioData(ab);
             }));
 
             const maxLen = Math.max(...buffers.map(b => b.length));
             const offlineCtx = new OfflineAudioContext(1, maxLen, audioCtx.sampleRate);
-
-            buffers.forEach(buffer => {
-                const source = offlineCtx.createBufferSource();
-                source.buffer = buffer;
-                source.connect(offlineCtx.destination);
-                source.start();
+            
+            buffers.forEach(b => {
+                const s = offlineCtx.createBufferSource();
+                s.buffer = b;
+                s.connect(offlineCtx.destination);
+                s.start();
             });
 
-            const renderedBuffer = await offlineCtx.startRendering();
+            // Rozpoczęcie renderowania
+            const renderPromise = offlineCtx.startRendering();
 
-            // Przechwytywanie do WebM
-            const destination = audioCtx.createMediaStreamDestination();
-            const source = audioCtx.createBufferSource();
-            source.buffer = renderedBuffer;
-            source.connect(destination);
+            // Interwał do śledzenia postępu renderowania
+            const progressInterval = setInterval(() => {
+                // Postęp renderowania (0-90% procesu)
+                const rawProgress = offlineCtx.currentTime / (maxLen / audioCtx.sampleRate);
+                const percent = Math.min(Math.floor(rawProgress * 90), 90);
+                btn.innerText = `MIKSUJĘ (${percent}%)`;
+            }, 100);
 
-            const recorder = new MediaRecorder(destination.stream, { mimeType: 'audio/webm' });
-            const mixedChunks = [];
-            recorder.ondataavailable = e => mixedChunks.push(e.data);
-            recorder.onstop = () => {
-                const finalBlob = new Blob(mixedChunks, { type: 'audio/webm' });
-                const url = URL.createObjectURL(finalBlob);
-                const projName = document.getElementById('projectName').value.replace(/\s+/g, '_') || 'Projekt';
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${projName}_MIX.webm`;
-                link.click();
-                btn.innerText = "💾 EKSPORTUJ ZAZNACZONE (MIX .WEBM)";
-                btn.disabled = false;
+            const renderedBuffer = await renderPromise;
+            clearInterval(progressInterval);
+            btn.innerText = "MIKSUJĘ (95%)";
+
+            // Zgrywanie do WebM
+            const dest = audioCtx.createMediaStreamDestination();
+            const src = audioCtx.createBufferSource();
+            src.buffer = renderedBuffer;
+            src.connect(dest);
+            
+            const rec = new MediaRecorder(dest.stream);
+            const finalChunks = [];
+            rec.ondataavailable = e => finalChunks.push(e.data);
+            rec.onstop = () => {
+                btn.innerText = "MIKSUJĘ (100%)";
+                const b = new Blob(finalChunks, { type: 'audio/webm' });
+                const l = document.createElement('a');
+                l.href = URL.createObjectURL(b);
+                const p = document.getElementById('projectName').value.replace(/\s+/g, '_');
+                l.download = `${p}_MIX.webm`;
+                l.click();
+                
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerText = "💾 EKSPORTUJ MIX";
+                }, 1000);
             };
 
-            recorder.start();
-            source.start();
-            source.onended = () => recorder.stop();
+            rec.start();
+            src.start();
+            src.onended = () => rec.stop();
 
-        } catch (err) {
-            console.error(err);
-            alert("Błąd podczas miksowania.");
+        } catch(e) {
+            console.error(e);
+            alert("Błąd miksu!");
             btn.disabled = false;
+            btn.innerText = "💾 EKSPORTUJ MIX";
         }
     }
-
     render();
 </script>
 </body>
